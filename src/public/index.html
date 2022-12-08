@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staus Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/2.2.1/json2html.min.js"></script>
+</head>
+<body class="bg-slate-100">
+  <div class="flex ">
+      <div class="lg:m-5 lg:px-20 grow h-14"> 
+        <div class="overflow-x-auto relative shadow-md sm:rounded-lg ">
+          <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
+                  <tr>
+                      <th scope="col" class="py-3 px-6 bg-gray-50 dark:bg-gray-800">
+                          Service Name
+                      </th>
+                      <th scope="col" class="py-3 px-6">
+                          Endpoint
+                      </th>
+                      <th scope="col" class="py-3 px-6 bg-gray-50 dark:bg-gray-800">
+                          Status
+                      </th>
+                      <th scope="col" class="py-3 px-6">
+                          Interval
+                      </th>
+                  </tr>
+              </thead>
+              <tbody id="tbody">
+                  
+              </tbody>
+          </table>
+        </div>
+      </div>
+    <div class="flex-none w-14 h-14">
+
+    </div>
+  </div>
+
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    function padTo2Digits(num) {
+    return num.toString().padStart(2, '0');
+  }
+
+  function unixTimeToHumman(unixTimeStamp) {
+    var ts = Math.round((new Date()).getTime() / 1000);
+    var difference = ts - unixTimeStamp;
+    const date = new Date(difference * 1000);
+
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+
+    return `${padTo2Digits(hours)}:${padTo2Digits(minutes)}:${padTo2Digits(seconds,)}`;
+  }
+
+  var socket = io();
+  var statusData;
+  var initial = false;
+
+  socket.on('new-status-data', (data) => {
+    statusData = data.monitors;
+    console.log(statusData);
+    if (!initial) {
+      initialBuildTable(statusData); initial = true
+    } else {
+
+    }
+  });
+
+
+  function initialBuildTable(data) {
+    for (let i = 0; i < data.length; i++) {
+      const element = data[i];
+
+      // create all requred elements
+      var tr = document.createElement("tr");
+      var serviceName = document.createElement("th");
+      var url = document.createElement("td");
+      var status = document.createElement("td");
+      var lastChecked = document.createElement("td");
+
+      // modifiy it's attributes and content
+      tr.className = "border-b border-gray-200 dark:border-gray-700";
+
+      serviceName.classList = "py-4 px-6 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800"
+      serviceName.innerText = data[i].friendly_name;
+
+      url.className ="py-4 px-6"
+      url.innerText = data[i].url;
+
+      if (element.status == 2) {
+        status.className = "py-4 px-6 bg-green-500 text-stone-800";
+        status.innerText = "Online";
+      } else if (element.status == 9) {
+        status.className = "py-4 px-6 bg-red-500 text-stone-800";
+        status.innerText = "Offline";
+      } else if (element.status == 8) {
+        status.className = "py-4 px-6 bg-amber-400 text-stone-800";
+        status.innerText = "Seems Down";
+      }
+
+      lastChecked.className ="py-4 px-6"
+      lastChecked.innerText = `${(element.interval/60)}min`;
+      
+      // append all to tr
+      tr.appendChild(serviceName);
+      tr.appendChild(url);
+      tr.appendChild(status);
+      tr.appendChild(lastChecked);
+      
+      document.getElementById("tbody").appendChild(tr);
+
+    }
+  }
+
+  function updateBuildTabl(data) {
+
+  }
+
+
+</script>
+</html>
