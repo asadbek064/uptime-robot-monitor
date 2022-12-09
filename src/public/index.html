@@ -89,7 +89,6 @@
 
   socket.on('new-status-data', (data) => {
     statusData = data.monitors;
-    console.log(statusData);
     if (!initial) {
       initialBuildTable(statusData); initial = true;
       updateClock();
