@@ -7,7 +7,7 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const port = process.env.PORT || 3000;
-const SetInterval = process.env.SetInterval || 10;
+const SetInterval = process.env.SetInterval || 30;
 const Robot = require("./uptimerobot");
 const NodeCache = require( "node-cache" );
 const myCache = new NodeCache({ stdTTL: 10, checkperiod: 120 } );
@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
         });
 
     }
-    setInterval(senNewData, 30*1000);
+    setInterval(senNewData, SetInterval*1000);
 
   });
 

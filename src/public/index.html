@@ -1,40 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staus Page</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/2.2.1/json2html.min.js"></script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staus Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/json2html/2.2.1/json2html.min.js"></script>
+  <link rel="stylesheet" href="/style.css">
 </head>
+
 <body class="bg-slate-100">
-  <div class="flex ">
-      <div class="lg:m-5 lg:px-20 grow h-14"> 
-        <div class="overflow-x-auto relative shadow-md sm:rounded-lg ">
-          <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-              <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
-                  <tr>
-                      <th scope="col" class="py-3 px-6 bg-gray-50 dark:bg-gray-800">
-                          Service Name
-                      </th>
-                      <th scope="col" class="py-3 px-6">
-                          Endpoint
-                      </th>
-                      <th scope="col" class="py-3 px-6 bg-gray-50 dark:bg-gray-800">
-                          Status
-                      </th>
-                      <th scope="col" class="py-3 px-6">
-                          Interval
-                      </th>
-                  </tr>
-              </thead>
-              <tbody id="tbody">
-                  
-              </tbody>
-          </table>
+
+    <div id="clock" class=" flex flex-row justify-center m-3 pt-2 md:font-bold text-5xl text-stone-800">
+        <div id="clock-hh"></div>
+        <div class="px-1">:</div>
+        <div id="clock-mm"></div>
+        <div class="px-1">:</div>
+        <div id="clock-ss"></div>
+        <div id="clock-ampm" class="text-2xl pt-4 pl-1"></div>
+        
+        <div class="loading flex justify-center items-center pt-4 pl-2"> 
+          <svg id="hearbeat" width="16px" height="16px">
+            <polyline id="back" points="1 6 4 6 6 11 10 1 12 6 15 6"></polyline>
+            <polyline id="front" points="1 6 4 6 6 11 10 1 12 6 15 6"></polyline>
+          </svg>
         </div>
       </div>
+
+      
+  </div>
+
+  <div class="flex ">
+    <div class="lg:m-5 lg:px-20 grow h-14">
+      <div class="overflow-x-auto relative shadow-md sm:rounded-lg ">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
+            <tr>
+              <th scope="col" class="py-3 px-6 bg-gray-50 dark:bg-gray-800">
+                Service Name
+              </th>
+              <th scope="col" class="py-3 px-6">
+                Endpoint
+              </th>
+              <th scope="col" class="py-3 px-6 bg-gray-50 dark:bg-gray-800">
+                Status
+              </th>
+              <th scope="col" class="py-3 px-6">
+                Interval
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+
+          </tbody>
+        </table>
+      </div>
+    </div>
     <div class="flex-none w-14 h-14">
 
     </div>
@@ -44,7 +67,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    function padTo2Digits(num) {
+  function padTo2Digits(num) {
     return num.toString().padStart(2, '0');
   }
 
@@ -68,9 +91,10 @@
     statusData = data.monitors;
     console.log(statusData);
     if (!initial) {
-      initialBuildTable(statusData); initial = true
+      initialBuildTable(statusData); initial = true;
+      updateClock();
     } else {
-
+      updateBuildTable(statusData);
     }
   });
 
@@ -86,14 +110,18 @@
       var status = document.createElement("td");
       var lastChecked = document.createElement("td");
 
+
       // modifiy it's attributes and content
       tr.className = "border-b border-gray-200 dark:border-gray-700";
-
       serviceName.classList = "py-4 px-6 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800"
-      serviceName.innerText = data[i].friendly_name;
+      serviceName.innerText = element.friendly_name;
+      serviceName.id = element.friendly_name
 
-      url.className ="py-4 px-6"
-      url.innerText = data[i].url;
+      url.className = "py-4 px-6"
+      url.innerText = element.url;
+      url.id = element.url;
+
+      status.id = element.status + 1;
 
       if (element.status == 2) {
         status.className = "py-4 px-6 bg-green-500 text-stone-800";
@@ -106,24 +134,81 @@
         status.innerText = "Seems Down";
       }
 
-      lastChecked.className ="py-4 px-6"
-      lastChecked.innerText = `${(element.interval/60)}min`;
-      
+      lastChecked.className = "py-4 px-6"
+      lastChecked.innerText = `${(element.interval / 60)}min`;
+
       // append all to tr
       tr.appendChild(serviceName);
       tr.appendChild(url);
       tr.appendChild(status);
       tr.appendChild(lastChecked);
-      
+
       document.getElementById("tbody").appendChild(tr);
 
     }
   }
 
-  function updateBuildTabl(data) {
+  function updateBuildTable(data) {
+    for (let i = 0; i < data.length; i++) {
+      const element = data[i];
+      var serviceName = document.getElementById(element.friendly_name);
+      var url = document.getElementById(element.url);
+      var status = document.getElementById(element.status + 1);
 
+      if (element.status == 2) {
+        status.className = "py-4 px-6 bg-green-500 text-stone-800";
+        status.innerText = "Online";
+      } else if (element.status == 9) {
+        status.className = "py-4 px-6 bg-red-500 text-stone-800";
+        status.innerText = "Offline";
+      } else if (element.status == 8) {
+        status.className = "py-4 px-6 bg-amber-400 text-stone-800";
+        status.innerText = "Seems Down";
+      }
+    }
   }
 
+  function updateClock() {
+    // Get the current time
+    let now = new Date();
+
+    // Get the hours, minutes, and seconds from the current time
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    let seconds = now.getSeconds();
+
+    // Convert the hours from military time to 12-hour time
+    let ampm = "AM";
+    if (hours >= 12) {
+      hours = hours - 12;
+      ampm = "PM";
+    }
+    if (hours === 0) {
+      hours = 12;
+    }
+
+    // Add a leading zero to the hours, minutes, and seconds if needed
+    if (hours < 10) {
+      hours = "0" + hours;
+    }
+    if (minutes < 10) {
+      minutes = "0" + minutes;
+    }
+    if (seconds < 10) {
+      seconds = "0" + seconds;
+    }
+
+    
+    // Update the clock display
+    document.getElementById("clock-hh").innerText = hours;
+    document.getElementById("clock-mm").innerText = minutes
+    document.getElementById("clock-ss").innerText = seconds;
+    document.getElementById("clock-ampm").innerText = ampm;
+  }
+
+  // Use setInterval() to call the updateClock() function every 1000ms (1 second)
+  setInterval(updateClock, 1000);
 
 </script>
+
 </html>
