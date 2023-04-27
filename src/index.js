@@ -12,7 +12,7 @@ const Robot = require("./uptimerobot");
 const NodeCache = require( "node-cache" );
 const myCache = new NodeCache({ stdTTL: 10, checkperiod: 120 } );
 
-app.use(express.static(path.join(__dirname, 'public', 'css'))); 
+app.use(express.static(path.join(__dirname, 'public', 'public/js'))); 
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
